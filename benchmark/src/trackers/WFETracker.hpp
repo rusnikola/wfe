@@ -357,10 +357,9 @@ public:
 		for (auto iterator = myTrash->begin(), end = myTrash->end(); iterator != end; ) {
 			WFEInfo res = *iterator;
 			uint64_t ce = counter_end.ui.load(std::memory_order_acquire);
-			if(res.obj->deletable() && can_delete(res.birth_epoch, res.retire_epoch, 0, he_num)){
+			if (res.obj->deletable() && can_delete(res.birth_epoch, res.retire_epoch, 0, he_num) && can_delete(res.birth_epoch, res.retire_epoch, he_num, he_num+1)) {
 				uint64_t cs = counter_start.ui.load(std::memory_order_acquire);
-				// check once again due to potential hand-off
-				if(ce == cs || (can_delete(res.birth_epoch, res.retire_epoch, he_num, he_num+2) && can_delete(res.birth_epoch, res.retire_epoch, 0, he_num))){
+				if (ce == cs || (can_delete(res.birth_epoch, res.retire_epoch, he_num+1, he_num+2) && can_delete(res.birth_epoch, res.retire_epoch, 0, he_num))) {
 					reclaim(res.obj);
 					iterator = myTrash->erase(iterator);
 					this->dec_retired(tid);
